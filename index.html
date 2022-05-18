@@ -47,9 +47,9 @@
             }
             let others = recursiveClauses(size - k + 1)
             clauses = clauses.concat(others)
-            // console.log(clauses)
             let solution = satSolve(size, clauses)
-            console.log(solution)
+            if (!solution) return solution 
+            return solution.filter(i => i>0).map(i => i-1)
         }
         function recursiveClauses(stop, v = [], j = 0) {
             let out = []
