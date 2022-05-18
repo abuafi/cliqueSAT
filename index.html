@@ -10,11 +10,15 @@
         <div id="content">
             <h1>K-Clique solver</h1>
             <div id="canvas_wrapper"><canvas id="canvas" width="500", height="500"></canvas></div>
-            <span> k = <input class="input" id="k_selector" type="number" value="0" min="0" max="0"></span>
+            <span> k = <input class="input" id="k_selector" type="number" value="1" min="1" max="1"></span>
             <button class="input" id="solve_btn">Solve!</button>
         </div>
     </body>
     <script>
+        const vertexColor = [0, 255, 0]
+        const highlightEdgeColor = [255, 0, 0]
+        const edgeColor = [0, 0, 0]
+        const phantomOpacity = 0.3
         kSelector = document.getElementById("k_selector")
         canvas = document.getElementById("canvas")
         canvasW = document.getElementById("canvas_wrapper")
@@ -24,17 +28,21 @@
         startBtn.addEventListener("click", () => runSolver())
         class Vertex {
             x; y; i
-            color = 'green'
-            draw() {
+            color = vertexColor
+            draw(opacity = 1) {
                 context.beginPath();
                 let x = realX(this)
                 let y = realY(this)
                 context.arc(x, y, vertexRadius, 0, 2 * Math.PI, false);
-                context.fillStyle = this.color;
+                context.fillStyle = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${opacity})`
                 context.fill();
                 context.lineWidth = 1;
                 context.strokeStyle = "black";
                 context.stroke()
+            }
+            move(x,y) {
+                this.x = x 
+                this.y = y
             }
             constructor(x,y,i) {
                 this.x = x
@@ -43,21 +51,35 @@
             }
         }
         class Edge {
-            vertex1; vertex2; color = 'black'
+            vertex1; vertex2; color = edgeColor
             constructor(v1,v2) {
                 this.vertex1 = v1 
                 this.vertex2 = v2
             }
-            draw() {
-                let x1 = realX(vertices[this.vertex1])
-                let y1 = realY(vertices[this.vertex1])
-                let x2 = realX(vertices[this.vertex2])
-                let y2 = realY(vertices[this.vertex2])
+            getVertex1() {
+                if (this.vertex1 == -1 || draggingVertex && vertices[this.vertex1].i == mouseDownVertex.i) {
+                    return phantomVertex
+                } else {
+                    return vertices[this.vertex1]
+                }
+            }
+            getVertex2() {
+                if (this.vertex2 == -1 || draggingVertex && vertices[this.vertex2].i == mouseDownVertex.i) {
+                    return phantomVertex
+                } else {
+                    return vertices[this.vertex2]
+                }
+            }
+            draw(opacity = 1) {
+                let x1 = realX(this.getVertex1())
+                let y1 = realY(this.getVertex1())
+                let x2 = realX(this.getVertex2())
+                let y2 = realY(this.getVertex2())
                 context.beginPath();
                 context.moveTo(x1, y1);
                 context.lineTo(x2, y2);
-                context.strokeStyle = this.color;
-                this.color = 'black'
+                context.strokeStyle = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${opacity})`
+                this.color = edgeColor
                 context.stroke();
             }
         }
@@ -72,8 +94,8 @@
         function runSolver() {
             k = kSelector.value
             solution = solve()
-            console.log(solution)
             if (solution) {
+                solution = solution.slice(0,k)
                 highlight(solution)
             }
             drawCanvas()
@@ -87,36 +109,60 @@
             kSelector.max = i+1
             return newVertex
         }
+        function haveSameVertices(e1,e2) {
+            return (e1.vertex1 == e2.vertex1 && e1.vertex2 == e2.vertex2) || (e1.vertex2 == e2.vertex1 && e1.vertex1 == e2.vertex2)
+        }
         function drawCanvas() {
             context.clearRect(0,0,canvas.width,canvas.height)
+            let phantomDragVertex = dragging && draggingVertex
+            let phantomDragEdge = dragging && !draggingVertex
             for (edge of edges) {
+                if (phantomDragEdge && haveSameVertices(edge, phantomEdge)) continue
                 edge.draw()
             }
+            if (phantomDragEdge) phantomEdge.draw(phantomOpacity)
             for (vertex of vertices) {
+                if (phantomDragVertex && vertex.i == mouseDownVertex.i) continue
                 vertex.draw()
             }
+            if (phantomDragVertex) phantomVertex.draw(phantomOpacity)
         }
         function getCanvasCoord(e) {
             return {x: e.layerX/canvas.width, y: e.layerY/canvas.height}
         }
         var mouseDownTime
         var mouseDownVertex
+        var dragging = false
+        var draggingCreated = false
+        var draggingVertex = false
+        var mouseDownPos
+        var mouseDragPos
         function canvasMouseDown(e) {
-            mouseDownTime = e.timeStamp
             e.preventDefault()
+            if (dragging) return;
+            dragging = true
+            mouseDownTime = e.timeStamp
             let pos = getCanvasCoord(e)
+            phantomVertex.move(pos.x, pos.y)
+            mouseDownPos = pos
             let found = vertexTree.nearest(getCanvasCoord(e), 1, snap)
             if (found.length) {
                 mouseDownVertex = found[0][0]
+                draggingCreated = false
             } else {
                 mouseDownVertex = addVertex(pos.x,pos.y)
+                draggingCreated = true
             }
             canvasAfter()
         }
         const snap = 50
         function canvasMouseUp(e) {
+            phantomEdge.vertex1 = -1
+            phantomEdge.vertex2 = -1
+            dragging = false
             e.preventDefault()
-            let found = vertexTree.nearest(getCanvasCoord(e), 1, snap)
+            let pos = getCanvasCoord(e)
+            let found = vertexTree.nearest(pos, 1, snap)
             if (found.length) {
                 let foundVertex = found[0][0]
                 if (foundVertex != mouseDownVertex) {
@@ -133,8 +179,33 @@
                         edges.push(new Edge(newEdge.v1, newEdge.v2))
                     }
                 }
+            }  else {
+                if (!draggingCreated) {
+                    vertexTree.remove(mouseDownVertex)
+                    mouseDownVertex.move(pos.x, pos.y)
+                    vertexTree.insert(mouseDownVertex)
+                }
             }
             canvasAfter()
+        }
+        var phantomVertex = new Vertex(-1,-1,-1)
+        var phantomEdge = new Edge(-1, -1)
+        function canvasMouseDrag(e) {
+            if (dragging) {
+                let pos = getCanvasCoord(e)
+                let found = vertexTree.nearest(pos, 1, snap)
+                phantomVertex.move(pos.x, pos.y)
+                if (!draggingCreated && !found.length) {
+                    draggingVertex = true
+                } else {
+                    mouseDragPos = pos
+                    draggingVertex = false
+                    phantomEdge.vertex1 = mouseDownVertex.i
+                    if (found.length) phantomEdge.vertex2 = found[0][0].i
+                    else phantomEdge.vertex2 = -1
+                }
+                canvasAfter()
+            }
         }
         function canvasAfter() {
             drawCanvas()
@@ -142,6 +213,7 @@
         function setupCanvas() {
             canvas.addEventListener("mousedown", canvasMouseDown)
             canvas.addEventListener("mouseup", canvasMouseUp)
+            canvas.addEventListener("mousemove", canvasMouseDrag)
         }
         window.onload = function () {
             canvas.width = canvasW.clientWidth
@@ -159,7 +231,7 @@
             secondVertexFound = (edge) => vertices.find(v => edge.vertex2 == v) != undefined
             for(edge of edges) {
                 if (firstVertexFound(edge) && secondVertexFound(edge)) {
-                    edge.color = 'red'
+                    edge.color = highlightEdgeColor
                     redraw = true
                 }
             }
