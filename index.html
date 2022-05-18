@@ -1,79 +1,142 @@
 
 <html>
-    <head><script src="./solver/sat.js" rel="text/javascript"></script></head>
+    <head>
+        <link rel="stylesheet" href="./style/main.css">
+        <script src="./solver/sat.js" rel="text/javascript"></script>
+        <script src="./kdtree/kdTree.js" rel="text/javascript"></script>
+        <script src="./clique.js" rel="text/javascript"></script>
+    </head>
     <body>
-        
+        <div id="content">
+            <h1>K-Clique solver</h1>
+            <div id="canvas_wrapper"><canvas id="canvas" width="500", height="500"></canvas></div>
+            <span> k = <input class="input" id="k_selector" type="number" value="0" min="0" max="0"></span>
+            <button class="input" id="solve_btn">Solve!</button>
+        </div>
     </body>
     <script>
-        // Size of clique we're trying to find
-        var k = 2
-        // Number of vertices in the graph
-        var instanceVertexCount = 10
-        // Adjacency matrix of the graph (only Lower Triangular is required)
-        var instance = [
-            [],
-            [0],
-            [0, 0],
-            [0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        ]
-        function setVertexCount(count) {
-            if (count < instanceVertexCount) {
-                console.warn("Reducing vertex count may remove some existing edges");
-                while (instanceVertexCount > count) {
-                    instance.pop()
-                    instanceVertexCount--
-                }
+        kSelector = document.getElementById("k_selector")
+        canvas = document.getElementById("canvas")
+        canvasW = document.getElementById("canvas_wrapper")
+        context = canvas.getContext('2d')
+        const vertexRadius = 8
+        startBtn = document.getElementById("solve_btn")
+        startBtn.addEventListener("click", () => runSolver())
+        class Vertex {
+            x; y; i
+            color = 'green'
+            draw() {
+                context.beginPath();
+                let x = realX(this)
+                let y = realY(this)
+                context.arc(x, y, vertexRadius, 0, 2 * Math.PI, false);
+                context.fillStyle = this.color;
+                context.fill();
+                context.lineWidth = 1;
+                context.strokeStyle = '#003300';
+                context.stroke()
+            }
+            constructor(x,y,i) {
+                this.x = x
+                this.y = y
+                this.i = i
+            }
+        }
+        class Edge {
+            vertex1; vertex2 
+            constructor(v1,v2) {
+                this.vertex1 = v1 
+                this.vertex2 = v2
+            }
+            draw() {
+                let x1 = realX(vertices[this.vertex1])
+                let y1 = realY(vertices[this.vertex1])
+                let x2 = realX(vertices[this.vertex2])
+                let y2 = realY(vertices[this.vertex2])
+                context.beginPath();
+                context.moveTo(x1, y1);
+                context.lineTo(x2, y2);
+                context.stroke();
+            }
+        }
+        function realY(o) { return o.y*canvas.height }
+        function realX(o) { return o.x*canvas.width }
+        function euclidean(va, vb) {
+            return Math.sqrt(Math.pow(realX(va)-realX(vb),2)+Math.pow(realY(va)-realY(vb),2))
+        }
+        const vertices = []
+        const edges = []
+        const vertexTree = new kdTree([], euclidean, ['x','y'])
+        function runSolver() {
+            k = kSelector.value
+            solution = solve()
+            console.log(solution)
+        }
+        function addVertex(x,y) {
+            let i = instanceVertexCount
+            let newVertex = new Vertex(x,y,i)
+            vertices[i] = newVertex
+            vertexTree.insert(newVertex)
+            setVertexCount(i+1)
+            kSelector.max = i+1
+            return newVertex
+        }
+        function drawCanvas() {
+            context.clearRect(0,0,canvas.width,canvas.height)
+            for (vertex of vertices) {
+                vertex.draw()
+            }
+            for (edge of edges) {
+                edge.draw()
+            }
+        }
+        function getCanvasCoord(e) {
+            return {x: e.layerX/canvas.width, y: e.layerY/canvas.height}
+        }
+        var mouseDownTime
+        var mouseDownVertex
+        function canvasMouseDown(e) {
+            mouseDownTime = e.timeStamp
+            e.preventDefault()
+            let pos = getCanvasCoord(e)
+            let found = vertexTree.nearest(getCanvasCoord(e), 1, snap)
+            if (found.length) {
+                mouseDownVertex = found[0][0]
             } else {
-                while (instanceVertexCount < count) {
-                    instance.push(Array(instanceVertexCount).fill(0))
-                    instanceVertexCount++
+                mouseDownVertex = addVertex(pos.x,pos.y)
+            }
+            canvasAfter()
+        }
+        const snap = 50
+        function canvasMouseUp(e) {
+            e.preventDefault()
+            let found = vertexTree.nearest(getCanvasCoord(e), 1, snap)
+            if (found.length) {
+                let foundVertex = found[0][0]
+                if (foundVertex != mouseDownVertex) {
+                    newEdge = addEdge(mouseDownVertex.i, foundVertex.i)
+                    edges.push(new Edge(newEdge.v1, newEdge.v2))
                 }
             }
+            canvasAfter()
         }
-        function addEdge(vertex1, vertex2) {
-            if (vertex1 == vertex2) {
-                throw("Invalid edge")
-            }
-            vs = [vertex1, vertex2].sort()
-            vertex2 = vs[0]
-            vertex1 = vs[1]
-            instance[vertex1][vertex2] = 1
-            return
+        function canvasAfter() {
+            drawCanvas()
         }
-        function solve() {
-            let size = instanceVertexCount;
-            let clauses = []
-            for (row in instance) {
-                for (col in instance[row]) {
-                    // For each possible combination of vertices
-                    if (!instance[row][col]) {
-                        // If there is no edge create a clause
-                        // "Either row or col are not in the clique"
-                        clauses.push([-(parseInt(row)+1), -(parseInt(col)+1)])
-                    }
-                }
-            }
-            let others = recursiveClauses(size - k + 1)
-            clauses = clauses.concat(others)
-            let solution = satSolve(size, clauses)
-            if (!solution) return solution 
-            return solution.filter(i => i>0).map(i => i-1)
+        function setupCanvas() {
+            canvas.addEventListener("mousedown", canvasMouseDown)
+            canvas.addEventListener("mouseup", canvasMouseUp)
         }
-        function recursiveClauses(stop, v = [], j = 0) {
-            let out = []
-            if (v.length == stop) return [v]
-            for (let i = j; i < instanceVertexCount; i++) {
-                next = [...v]
-                next.push(i+1)
-                out = out.concat(recursiveClauses(stop, next, i+1))
-            }
-            return out
+        window.onload = function () {
+            canvas.width = canvasW.clientWidth
+            canvas.height = canvasW.clientHeight
+            setupCanvas()
+            drawCanvas()
+        }
+        window.onresize= function () {
+            canvas.width = canvasW.clientWidth
+            canvas.height = canvasW.clientHeight
+            drawCanvas()
         }
     </script>
 </html>
