@@ -22,11 +22,24 @@ function addEdge(vertex1, vertex2) {
     if (vertex1 == vertex2) {
         throw("Invalid edge")
     }
-    vs = [vertex1, vertex2].sort()
-    vertex2 = vs[0]
-    vertex1 = vs[1]
+    [vertex2, vertex1] = [vertex1, vertex2].sort()
     instance[vertex1][vertex2] = 1
     return {v1:vertex1, v2:vertex2}
+}
+function removeEdge(vertex1, vertex2) {
+    if (vertex1 == vertex2) {
+        throw("Invalid edge")
+    }
+    [vertex2, vertex1] = [vertex1, vertex2].sort()
+    instance[vertex1][vertex2] = 0
+    return {v1:vertex1, v2:vertex2}
+}
+function connected(vertex1, vertex2) {
+    if (vertex1 == vertex2) {
+        return 0
+    }
+    [vertex2, vertex1] = [vertex1, vertex2].sort()
+    return instance[vertex1][vertex2]
 }
 function solve() {
     let size = instanceVertexCount;
