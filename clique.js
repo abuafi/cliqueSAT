@@ -4,6 +4,9 @@ var k = 1
 var instanceVertexCount = 0
 // Adjacency matrix of the graph (only Lower Triangular is required)
 var instance = []
+function reorder(a,b) {
+    return [Math.max(a,b), Math.min(a,b)]
+}
 function setVertexCount(count) {
     if (count < instanceVertexCount) {
         console.warn("Reducing vertex count may remove some existing edges");
@@ -22,7 +25,7 @@ function addEdge(vertex1, vertex2) {
     if (vertex1 == vertex2) {
         throw("Invalid edge")
     }
-    [vertex2, vertex1] = [vertex1, vertex2].sort()
+    [vertex1, vertex2] = reorder(vertex1,vertex2)
     instance[vertex1][vertex2] = 1
     return {v1:vertex1, v2:vertex2}
 }
@@ -30,7 +33,7 @@ function removeEdge(vertex1, vertex2) {
     if (vertex1 == vertex2) {
         throw("Invalid edge")
     }
-    [vertex2, vertex1] = [vertex1, vertex2].sort()
+    [vertex1, vertex2] = reorder(vertex1,vertex2)
     instance[vertex1][vertex2] = 0
     return {v1:vertex1, v2:vertex2}
 }
@@ -38,7 +41,7 @@ function connected(vertex1, vertex2) {
     if (vertex1 == vertex2) {
         return 0
     }
-    [vertex2, vertex1] = [vertex1, vertex2].sort()
+    [vertex1, vertex2] = reorder(vertex1,vertex2)
     return instance[vertex1][vertex2]
 }
 function solve() {
