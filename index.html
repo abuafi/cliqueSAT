@@ -1,0 +1,67 @@
+
+<html>
+    <head><script src="./solver/sat.js" rel="text/javascript"></script></head>
+    <body>
+        
+    </body>
+    <script>
+        // Size of clique we're trying to find
+        var k = 2
+        // Number of vertices in the graph
+        var instanceVertexCount = 10
+        // Adjacency matrix of the graph (only Lower Triangular is required)
+        var instance = [
+            [],
+            [0],
+            [0, 0],
+            [0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ]
+        function addEdge(vertex1, vertex2) {
+            if (vertex1 == vertex2) {
+                throw("Invalid edge")
+            }
+            vs = [vertex1, vertex2].sort()
+            vertex2 = vs[0]
+            vertex1 = vs[1]
+            instance[vertex1][vertex2] = 1
+            return
+        }
+        function solve() {
+            let size = instanceVertexCount;
+            let clauses = []
+            for (row in instance) {
+                for (col in instance[row]) {
+                    // For each possible combination of vertices
+                    if (!instance[row][col]) {
+                        // If there is no edge create a clause
+                        // "Either row or col are not in the clique"
+                        clauses.push([-(parseInt(row)+1), -(parseInt(col)+1)])
+                    }
+                }
+            }
+            let others = recursiveClauses(size - k + 1)
+            clauses = clauses.concat(others)
+            // console.log(clauses)
+            let solution = satSolve(size, clauses)
+            console.log(solution)
+        }
+        function recursiveClauses(stop, v = [], j = 0) {
+            let out = []
+            if (v.length == stop) return [v]
+            for (let i = j; i < instanceVertexCount; i++) {
+                next = [...v]
+                next.push(i+1)
+                out = out.concat(recursiveClauses(stop, next, i+1))
+            }
+            return out
+        }
+    </script>
+</html>
+
+
