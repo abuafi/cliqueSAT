@@ -22,6 +22,20 @@
             [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0]
         ]
+        function setVertexCount(count) {
+            if (count < instanceVertexCount) {
+                console.warn("Reducing vertex count may remove some existing edges");
+                while (instanceVertexCount > count) {
+                    instance.pop()
+                    instanceVertexCount--
+                }
+            } else {
+                while (instanceVertexCount < count) {
+                    instance.push(Array(instanceVertexCount).fill(0))
+                    instanceVertexCount++
+                }
+            }
+        }
         function addEdge(vertex1, vertex2) {
             if (vertex1 == vertex2) {
                 throw("Invalid edge")
