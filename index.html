@@ -19,13 +19,16 @@
         const highlightEdgeColor = [255, 0, 0]
         const edgeColor = [0, 0, 0]
         const phantomOpacity = 0.3
+        const vertexRadius = 8
         kSelector = document.getElementById("k_selector")
         canvas = document.getElementById("canvas")
         canvasW = document.getElementById("canvas_wrapper")
         context = canvas.getContext('2d')
-        const vertexRadius = 8
-        startBtn = document.getElementById("solve_btn")
-        startBtn.addEventListener("click", () => runSolver())
+        solveBtn = document.getElementById("solve_btn")
+        solveBtn.addEventListener("click", (e) => {
+            e.preventDefault()
+            runSolver()
+        })
         class Vertex {
             x; y; i
             color = vertexColor
@@ -135,8 +138,6 @@
         var dragging = false
         var draggingCreated = false
         var draggingVertex = false
-        var mouseDownPos
-        var mouseDragPos
         function canvasMouseDown(e) {
             e.preventDefault()
             if (dragging) return;
@@ -144,8 +145,7 @@
             mouseDownTime = e.timeStamp
             let pos = getCanvasCoord(e)
             phantomVertex.move(pos.x, pos.y)
-            mouseDownPos = pos
-            let found = vertexTree.nearest(getCanvasCoord(e), 1, snap)
+            let found = vertexTree.nearest(pos, 1, snap)
             if (found.length) {
                 mouseDownVertex = found[0][0]
                 draggingCreated = false
@@ -155,7 +155,7 @@
             }
             canvasAfter()
         }
-        const snap = 50
+        const snap = 40
         function canvasMouseUp(e) {
             phantomEdge.vertex1 = -1
             phantomEdge.vertex2 = -1
@@ -179,33 +179,30 @@
                         edges.push(new Edge(newEdge.v1, newEdge.v2))
                     }
                 }
-            }  else {
-                if (!draggingCreated) {
-                    vertexTree.remove(mouseDownVertex)
-                    mouseDownVertex.move(pos.x, pos.y)
-                    vertexTree.insert(mouseDownVertex)
-                }
+            }  else if (!draggingCreated) {
+                vertexTree.remove(mouseDownVertex)
+                mouseDownVertex.move(pos.x, pos.y)
+                vertexTree.insert(mouseDownVertex)
             }
             canvasAfter()
         }
-        var phantomVertex = new Vertex(-1,-1,-1)
-        var phantomEdge = new Edge(-1, -1)
+        const phantomVertex = new Vertex(-1,-1,-1)
+        const phantomEdge = new Edge(-1, -1)
         function canvasMouseDrag(e) {
-            if (dragging) {
-                let pos = getCanvasCoord(e)
-                let found = vertexTree.nearest(pos, 1, snap)
-                phantomVertex.move(pos.x, pos.y)
-                if (!draggingCreated && !found.length) {
-                    draggingVertex = true
-                } else {
-                    mouseDragPos = pos
-                    draggingVertex = false
-                    phantomEdge.vertex1 = mouseDownVertex.i
-                    if (found.length) phantomEdge.vertex2 = found[0][0].i
-                    else phantomEdge.vertex2 = -1
-                }
-                canvasAfter()
+            e.preventDefault()
+            if (!dragging) return
+            let pos = getCanvasCoord(e)
+            let found = vertexTree.nearest(pos, 1, snap)
+            phantomVertex.move(pos.x, pos.y)
+            if (!draggingCreated && !found.length) {
+                draggingVertex = true
+            } else {
+                draggingVertex = false
+                phantomEdge.vertex1 = mouseDownVertex.i
+                if (found.length) phantomEdge.vertex2 = found[0][0].i
+                else phantomEdge.vertex2 = -1
             }
+            canvasAfter()
         }
         function canvasAfter() {
             drawCanvas()
@@ -221,7 +218,7 @@
             setupCanvas()
             drawCanvas()
         }
-        window.onresize= function () {
+        window.onresize = function () {
             canvas.width = canvasW.clientWidth
             canvas.height = canvasW.clientHeight
             drawCanvas()
@@ -232,9 +229,19 @@
             for(edge of edges) {
                 if (firstVertexFound(edge) && secondVertexFound(edge)) {
                     edge.color = highlightEdgeColor
-                    redraw = true
                 }
             }
+        }
+        function cliqueAll() {
+            for (let i = 0; i < instanceVertexCount; i++) {
+                for (let j = i+1; j < instanceVertexCount; j++) {
+                    if (!connected(i,j)) {
+                        newEdge = addEdge(i, j)
+                        edges.push(new Edge(newEdge.v1, newEdge.v2))
+                    }
+                }
+            }
+            drawCanvas()
         }
 
     </script>
