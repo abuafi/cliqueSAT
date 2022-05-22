@@ -1,10 +1,12 @@
-
+<!DOCTYPE html>
 <html>
     <head>
         <link rel="stylesheet" href="./style/main.css">
         <script src="./solver/sat.js" rel="text/javascript"></script>
         <script src="./kdtree/kdTree.js" rel="text/javascript"></script>
+        <script src="./graph.js" rel="text/javascript"></script>
         <script src="./clique.js" rel="text/javascript"></script>
+        <script src="./clique_alt.js" rel="text/javascript"></script>
     </head>
     <body>
         <div id="content">
@@ -12,9 +14,27 @@
             <div id="canvas_wrapper"><canvas id="canvas" width="500", height="500"></canvas></div>
             <span> k = <input class="input" id="k_selector" type="number" value="1" min="1" max="1"></span>
             <button class="input" id="solve_btn">Solve!</button>
+            <div>
+                <button disabled class="solve_setter" id="set_solve_1">Method 1</button>
+                <button class="solve_setter" id="set_solve_2">Method 2</button></div>
         </div>
     </body>
     <script>
+        setSolve1 = document.getElementById("set_solve_1")
+        setSolve2 = document.getElementById("set_solve_2")
+        solverSetters = document.getElementsByClassName("solve_setter")
+        let solveFun = solve
+        function setSolveFun(fun, e) {
+            e.preventDefault()
+            for (button of solverSetters) {
+                button.disabled = false
+            }
+            e.srcElement.disabled = true
+            solveFun = fun
+        }
+        setSolve1.addEventListener("click", e => setSolveFun(solve, e))
+        setSolve2.addEventListener("click", e => setSolveFun(solve_alt, e))
+        
         const vertexColor = [0, 255, 0]
         const highlightEdgeColor = [255, 0, 0]
         const edgeColor = [0, 0, 0]
@@ -93,7 +113,7 @@
         const vertexTree = new kdTree([], euclidean, ['x','y'])
         function runSolver() {
             k = kSelector.value
-            solution = solve()
+            solution = solveFun()
             if (solution) {
                 solution = solution.slice(0,k)
                 highlight(solution)
@@ -128,7 +148,7 @@
             if (phantomDragVertex) phantomVertex.draw(phantomOpacity)
         }
         function getCanvasCoord(e) {
-            return {x: e.layerX/canvas.width, y: e.layerY/canvas.height}
+            return {x: e.offsetX/canvas.width, y: e.offsetY/canvas.height}
         }
         var mouseDownTime
         var mouseDownVertex
