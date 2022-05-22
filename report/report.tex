@@ -66,7 +66,7 @@
 The clique problem is the computational problem of finding cliques in a graph. Given an undirected graph with N nodes and E edges and a value K, the task is to print all set of nodes which form a K size clique. 
 
 \begin{center}
-\includegraphics[scale=0.7]{report/MrlSG.png}
+\includegraphics[scale=0.7]{MrlSG.png}
 \end{center}
 
 A clique C of a graph G is usually defined as a subset of the vertex set of G (V(G)) such that every pair of distinct vertices in C is adjacent in G (That is, two vertices u,v $\in$ C and u$\neq$v implies that u,v $\in$ E(G)). In other words, a subset of the vertex set of G is a clique if and only if its induced subgraph is a complete graph, that is if all distinct vertices are joined by and edge.\newline
@@ -83,15 +83,15 @@ An undirected graph is formed by a finite set of vertices and a set of unordered
 In other words, it asks whether the variables of a given Boolean formula can be consistently replaced by the values TRUE or FALSE in such a way that the formula evaluates to TRUE. If this is the case, the formula is called satisfiable. On the other hand, if no such assignment exists, the function expressed by the formula is FALSE for all possible variable assignments and the formula is unsatisfiable.\newline
 
 \leftskip=0.0in 
-\subsection{3-SAT TO K-CLIQUE}
+\section{K-CLIQUE TO SAT}
 
 \leftskip=0.5in 
 Given a graph G=(V,E) and a number k, we will have variables $x_{iv}$ for every 1$\leq$i$\leq$k and every v$\in$V. You should think of $x_{iv}$ as stating that v is the $ith$ vertex in the clique. We want to encode the following constraints:
 
 \begin{enumerate}\leftskip=0.8in 
-\item 	For each i, there is an $ith$ vertex in the clique: $V_{v \in V} x_{iv}$.
-\item For each i,j the $ith$ vertex is different from the $jth$ vertex: for each v$\in$V, $\neg x_{iv} \lor \neg x_{jv}$.
-\item 	For each non-edge (u,v)$\notin$E, u,v cannot both belong to the clique: for each i,j $\neg x_{iu} \lor \neg x_{jv}$.
+\item 	For each i, there is an $ith$ vertex in the clique: \[\forall i\in \{1,\dots,k\}, \; x_{i1} \lor x_{i2} \lor x_{i3} \lor \dots \lor x_{iv}\]
+\item   For each i,j the $ith$ vertex is different from the $jth$ vertex: \[\forall v\in V, \forall(i,j)\in \{1,\dots,k\}, \; \neg x_{iv} \lor \neg x_{jv}\]
+\item 	For each i,j, the $ith$ vertex is connected to the $jth$ vertex: \[\forall v\in V, \forall(i,j)\in \{1,\dots,k\}, \; \neg x_{iv} \lor x_{ju_1} \lor \dots \lor x_{ju_m}\], s.t. $u_{1,\dots,m}$ are the neighbours of $v$.
 \end{enumerate}
 
 \leftskip=0.5in
@@ -115,42 +115,10 @@ Here the $y_{iv}$ are new variables. This set of clauses is equivalent to the or
 \leftskip=0.5in  
 We have found a solution, in which, for a complete graph with v vertices:
 \begin{enumerate}\leftskip=0.8in 
-\item We take all possible pairs of vertices.
-\item For each pair of vertices, we select those vertices that are not part of this pair.
-\item Then, we check, if the pair of vertices is true, that is to say, that they are joined by an edge, then, the rest of vertices are not true. If they are not connected, then the rest of the vertices are true.
+\item We take all unconnected pair of vertices.
+\item For each, at least one of them doesn't belong in a clique (If both did, it wouldn't be a clique since the two don't connect).
+\item Then, check that at least k vertices are part of the clique.
 \end{enumerate}
-
-We can see this with an example for a graph with 5 vertices ($v_1$, $v_2$, $v_3$, $v_4$ and $v_5$):
-We choose the following pairs:
-
-\begin{enumerate}\leftskip=0.8in 
-\item $v_1$ and $v_2$
-\item $v_1$ and $v_3$
-\item $v_1$ and $v_4$
-\item $v_1$ and $v_5$
-\item $v_2$ and $v_3$
-\item $v_2$ and $v_4$
-\item $v_2$ and $v_5$
-\item $v_3$ and $v_4$ 
-\item $v_3$ and $v_5$
-\item $v_4$ and $v_5$
-\end{enumerate}
-
-And then we check for the rest of the vertices
-\begin{enumerate}\leftskip=0.8in 
-\item $v_1$ and $v_2$ - $v_3$, $v_4$, $v_5$
-\item $v_1$ and $v_3$ - $v_2$, $v_4$, $v_5$
-\item $v_1$ and $v_4$ - $v_2$, $v_3$, $v_5$
-\item $v_1$ and $v_5$ - $v_2$, $v_3$, $v_4$
-\item $v_2$ and $v_3$ - $v_1$, $v_4$, $v_5$
-\item $v_2$ and $v_4$ - $v_1$, $v_3$, $v_5$
-\item $v_2$ and $v_5$ - $v_1$, $v_3$, $v_4$
-\item $v_3$ and $v_4$ - $v_1$, $v_2$, $v_5$
-\item $v_3$ and $v_5$ - $v_1$, $v_2$, $v_4$
-\item $v_4$ and $v_5$ - $v_1$, $v_2$, $v_3$
-\end{enumerate}
-
-Then we check for each pair, if for example $v_1$ and $v_2$ are joined, then $v_3$, $v_4$ and $v_5$ will be false.
 
 \leftskip=0.0in  
 \section{CODE}
@@ -167,7 +135,7 @@ The \textit{solve()} function will create clauses for pairs of vertices that are
 \leftskip=0.5in
 We will consider the vertices as a triangular matrix, in which in the first row will appear the connections that vertex 0 has, in the second row those of vertex 1, and so on until the last vertex (being 0 not connected with another vertex and 1 connected with another vertex).\newline
 
-For example, if we have 5 vertices and vertex 0 is connected to vertices 1 and 3, the first row of the matrix will be the following: 0 1 0 1 0 0
+For example, if we have 5 vertices and vertex 0 is connected to vertices 1 and 3, the first column of the matrix will be the following: 0 1 0 1 0 0
 
 Therefore, we will go through the matrix row by row and column by column, i.e. element by element. 
 
