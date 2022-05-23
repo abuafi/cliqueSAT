@@ -7,13 +7,72 @@
 .input {
     margin-block-start: 0.67em;
     margin-block-end: 0.67em;
-    width: 100px;
+    width: 50px;
     height: 30px;
     font-size: large;
 }
 
+#solve_btn {
+    width: 150px;
+    height: 35px;
+    margin-bottom: 0.67em;
+    font-size: 18px;
+}
+
 #canvas_wrapper {
     width: 80%;
-    height: 600px;
-    border: 1pt solid black;
+    height: 550px;
+    border-radius: 10px;
+    border: 2pt solid black; 
 }
+
+* {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+}
+
+h1 {
+    font-weight: 800;
+}
+
+button { 
+    background-image: linear-gradient(135deg, #1bc54b 40%, #159430);
+    border: 0; 
+    border-radius: 10px; 
+    box-sizing: border-box;
+    color: #fff;
+    cursor: pointer; 
+    height: 40px; 
+    width: 160px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 3px;
+    text-transform: uppercase;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+button:active {
+    outline: 0;
+}
+
+button:hover {
+    outline: 0;
+    background-image: linear-gradient(135deg, #23d956 40%, #32a64b);
+}
+
+button span {
+    transition: all 200ms;
+}
+
+/* button:hover span {
+    transform: scale(.9);
+    opacity: .75; 
+} */
+
+button:disabled {  
+    font-weight: 800;
+    cursor: auto;
+    background-image: linear-gradient(135deg, #2c91e9 40%, #1a89bc);
+} 
