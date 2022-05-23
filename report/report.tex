@@ -24,6 +24,7 @@
 \usepackage{algorithm}
 \usepackage{algorithmicx}
 \usepackage{graphicx}
+\usepackage{hyperref}
 
 \usepackage{listings}
 \usepackage{color}
@@ -105,6 +106,8 @@ $\neg y_{iv_3} \lor x_{iv_4} \lor y_{iv_4} $ \newline
 ... \newline
 $\neg y_{iv_{n-2}} \lor x_{iv_{n-1}} \lor x_{iv_n} $ \newline
 \end{center}
+
+No matter what value of y we choose. Each clause must have one true literal. To make this true, we need to decide if we need true or false value in the first clause, but for the rest, it will always be true, because each have y and ¬y
 
 \leftskip=0.5in 
 Here the $y_{iv}$ are new variables. This set of clauses is equivalent to the original clause $x_{iv_1} \lor x_{iv_2} \lor ... \lor x_{iv_n} $.
@@ -200,5 +203,29 @@ The code of the function is as follows:
 
 
 \section{TEST CASES}
+
+
+\newpage\section{BIBLIOGRAPHY}
+
+\leftskip=1.2in
+\href{https://en.wikipedia.org/wiki/Clique_problem}{Clique problem}\newline
+
+\leftskip=1in
+\href{http://www.cs.ecu.edu/karl/6420/spr16/Notes/NPcomplete/3sat.html}{3 SAT}\newline
+
+\href{https://www.geeksforgeeks.org/proof-that-clique-decision-problem-is-np-complete}{CLIQUE is NP-complete}\newline
+
+\href{https://opendsa-server.cs.vt.edu/ODSA/Books/Everything/html/threeSAT_to_clique.html}{SAT to clique}\newline
+
+\href{https://paperzz.com/doc/7301675/3sat-reduction-to-clique}{reduction to clique}\newline
+ 
+\href{https://en.wikipedia.org/wiki/Boolean_satisfiability_problem}{Boolean satisfiability problem}\newline
+
+\href{https://www.cs.umd.edu/~gasarch/TOPICS/sat/SATtalk.pdf}{SAT}\newline
+
+\href{https://photolens.tech/reduction-3sat-and-clique/}{3 sat and clique}\newline
+
+\href{https://cs.stackexchange.com/questions/70531/reduction-3sat-and-clique}{reduction 3 sat to clique}\newline
+
 
 \end{document}
