@@ -76,3 +76,26 @@ button:disabled {
     cursor: auto;
     background-image: linear-gradient(135deg, #2c91e9 40%, #1a89bc);
 } 
+
+#results::before {
+    content: attr(data-sat);
+}
+
+#results[data-sat] {
+    /* border: 1pt solid black;  */
+    width: fit-content;
+    height: fit-content;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background-color: gray;
+}
+
+#results[data-sat="SAT"] {
+    background-color: #159430;
+}
+#results[data-sat="UNSAT"] {
+    background-color: red;
+}

@@ -17,13 +17,17 @@
             <button class="input" id="solve_btn">Solve!</button>
             <div>
                 <button disabled class="solve_setter" id="set_solve_1">Method 1</button>
-                <button class="solve_setter" id="set_solve_2">Method 2</button></div>
+                <button class="solve_setter" id="set_solve_2">Method 2</button>
+            </div>
+            <div class="input" id="results"></div>
         </div>
     </body>
     <script>
-        setSolve1 = document.getElementById("set_solve_1")
-        setSolve2 = document.getElementById("set_solve_2")
-        solverSetters = document.getElementsByClassName("solve_setter")
+        const resultsDiv = document.getElementById("results")
+
+        const setSolve1 = document.getElementById("set_solve_1")
+        const setSolve2 = document.getElementById("set_solve_2")
+        const solverSetters = document.getElementsByClassName("solve_setter")
         let solveFun = solve
         function setSolveFun(fun, e) {
             e.preventDefault()
@@ -117,12 +121,24 @@
         const vertexTree = new kdTree([], euclidean, ['x','y'])
         function runSolver() {
             k = kSelector.value
-            solution = solveFun()
-            if (solution) {
-                solution = solution.slice(0,k)
-                highlight(solution)
-            }
-            drawCanvas()
+            resultsDiv.dataset.sat = "Computing solution..."
+            setTimeout(() => {
+                try {
+                    let solution = solveFun()
+                    if (solution) {
+                        solution = solution.slice(0,k)
+                        highlight(solution)
+                        resultsDiv.dataset.sat = "SAT"
+                    } else {
+                        resultsDiv.dataset.sat = "UNSAT"
+                }}
+                catch(e) {
+                    resultsDiv.dataset.sat = e
+                }
+                finally {
+                    drawCanvas()
+                }
+                }, 0)
         }
         function addVertex(x,y) {
             let i = instanceVertexCount
