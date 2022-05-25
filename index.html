@@ -20,13 +20,17 @@
                 <button class="solve_setter" id="set_solve_2">Method 2</button>
             </div>
             <div class="input" id="results"></div>
+            <div>
+                <button id="download">Download graph</button>
+            </div>
+            <p> Load a graph by dragging the instance file onto the drawing area </p>
         </div>
     </body>
     <script>
         const resultsDiv = document.getElementById("results")
-
         const setSolve1 = document.getElementById("set_solve_1")
         const setSolve2 = document.getElementById("set_solve_2")
+        const downButton = document.getElementById("download")
         const solverSetters = document.getElementsByClassName("solve_setter")
         let solveFun = solve
         function setSolveFun(fun, e) {
@@ -39,86 +43,53 @@
         }
         setSolve1.addEventListener("click", e => setSolveFun(solve, e))
         setSolve2.addEventListener("click", e => setSolveFun(solve_alt, e))
+        downButton.addEventListener("click", download)
         
         const vertexColor = [0, 255, 0]
         const highlightEdgeColor = [255, 0, 0]
         const edgeColor = [0, 0, 0]
         const phantomOpacity = 0.3
         const vertexRadius = 8
-        kSelector = document.getElementById("k_selector")
-        canvas = document.getElementById("canvas")
-        canvasW = document.getElementById("canvas_wrapper")
-        context = canvas.getContext('2d')
-        solveBtn = document.getElementById("solve_btn")
+        const textType = "text/plain"
+        const kSelector = document.getElementById("k_selector")
+        const canvas = document.getElementById("canvas")
+        const canvasW = document.getElementById("canvas_wrapper")
+        const context = canvas.getContext('2d')
+        const solveBtn = document.getElementById("solve_btn")
         solveBtn.addEventListener("click", (e) => {
             e.preventDefault()
             runSolver()
         })
-        class Vertex {
-            x; y; i
-            color = vertexColor
-            draw(opacity = 1) {
-                context.beginPath();
-                let x = realX(this)
-                let y = realY(this)
-                context.arc(x, y, vertexRadius, 0, 2 * Math.PI, false);
-                context.fillStyle = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${opacity})`
-                context.fill();
-                context.lineWidth = 1;
-                context.strokeStyle = "black";
-                context.stroke()
-            }
-            move(x,y) {
-                this.x = x 
-                this.y = y
-            }
-            constructor(x,y,i) {
-                this.x = x
-                this.y = y
-                this.i = i
-            }
+        Vertex.prototype.draw = function(opacity = 1) {
+            context.beginPath();
+            let x = realX(this)
+            let y = realY(this)
+            context.arc(x, y, vertexRadius, 0, 2 * Math.PI, false);
+            context.fillStyle = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${opacity})`
+            context.fill();
+            context.lineWidth = 1;
+            context.strokeStyle = "black";
+            context.stroke()
         }
-        class Edge {
-            vertex1; vertex2; color = edgeColor
-            constructor(v1,v2) {
-                this.vertex1 = v1 
-                this.vertex2 = v2
-            }
-            getVertex1() {
-                if (this.vertex1 == -1 || draggingVertex && vertices[this.vertex1].i == mouseDownVertex.i) {
-                    return phantomVertex
-                } else {
-                    return vertices[this.vertex1]
-                }
-            }
-            getVertex2() {
-                if (this.vertex2 == -1 || draggingVertex && vertices[this.vertex2].i == mouseDownVertex.i) {
-                    return phantomVertex
-                } else {
-                    return vertices[this.vertex2]
-                }
-            }
-            draw(opacity = 1) {
-                let x1 = realX(this.getVertex1())
-                let y1 = realY(this.getVertex1())
-                let x2 = realX(this.getVertex2())
-                let y2 = realY(this.getVertex2())
-                context.beginPath();
-                context.moveTo(x1, y1);
-                context.lineTo(x2, y2);
-                context.strokeStyle = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${opacity})`
+        Edge.prototype.draw = function(opacity = 1) {
+            let x1 = realX(this.getVertex1())
+            let y1 = realY(this.getVertex1())
+            let x2 = realX(this.getVertex2())
+            let y2 = realY(this.getVertex2())
+            context.beginPath();
+            context.moveTo(x1, y1);
+            context.lineTo(x2, y2);
+            context.strokeStyle = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${opacity})`
+            if (this.color != edgeColor) {
+                context.lineWidth = 3
                 this.color = edgeColor
-                context.stroke();
+            } else {
+                context.lineWidth = 1
             }
+            context.stroke();
         }
         function realY(o) { return o.y*canvas.height }
         function realX(o) { return o.x*canvas.width }
-        function euclidean(va, vb) {
-            return Math.sqrt(Math.pow(realX(va)-realX(vb),2)+Math.pow(realY(va)-realY(vb),2))
-        }
-        const vertices = []
-        const edges = []
-        const vertexTree = new kdTree([], euclidean, ['x','y'])
         function runSolver() {
             k = kSelector.value
             resultsDiv.dataset.sat = "Computing solution..."
@@ -139,18 +110,6 @@
                     drawCanvas()
                 }
                 }, 0)
-        }
-        function addVertex(x,y) {
-            let i = instanceVertexCount
-            let newVertex = new Vertex(x,y,i)
-            vertices[i] = newVertex
-            vertexTree.insert(newVertex)
-            setVertexCount(i+1)
-            kSelector.max = i+1
-            return newVertex
-        }
-        function haveSameVertices(e1,e2) {
-            return (e1.vertex1 == e2.vertex1 && e1.vertex2 == e2.vertex2) || (e1.vertex2 == e2.vertex1 && e1.vertex1 == e2.vertex2)
         }
         function drawCanvas() {
             context.clearRect(0,0,canvas.width,canvas.height)
@@ -213,10 +172,9 @@
                         edges.pop()
                     } else {
                         newEdge = addEdge(mouseDownVertex.i, foundVertex.i)
-                        edges.push(new Edge(newEdge.v1, newEdge.v2))
                     }
                 }
-            }  else if (!draggingCreated) {
+            } else if (!draggingCreated && mouseDownVertex) {
                 vertexTree.remove(mouseDownVertex)
                 mouseDownVertex.move(pos.x, pos.y)
                 vertexTree.insert(mouseDownVertex)
@@ -241,6 +199,24 @@
             }
             canvasAfter()
         }
+        async function canvasFileDrop(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            let files = e.dataTransfer.files;
+            if (files.length > 1) return alert("Please only upload one file.")
+            let file = files[0]
+            if (file.type == textType) {
+                try {
+                    let text = await file.text()
+                    deserialize(text)
+                } catch {
+                    return alert("Invalid file.")
+                }
+                canvasAfter()
+            } else {
+                return alert("Please upload only text files.")
+            }
+        }
         function canvasAfter() {
             drawCanvas()
         }
@@ -248,6 +224,8 @@
             canvas.addEventListener("mousedown", canvasMouseDown)
             canvas.addEventListener("mouseup", canvasMouseUp)
             canvas.addEventListener("mousemove", canvasMouseDrag)
+            canvas.addEventListener("drop", canvasFileDrop)
+            canvas.addEventListener("dragover", (e) => e.preventDefault())
         }
         window.onload = function () {
             canvas.width = canvasW.clientWidth
@@ -274,13 +252,22 @@
                 for (let j = i+1; j < instanceVertexCount; j++) {
                     if (!connected(i,j)) {
                         newEdge = addEdge(i, j)
-                        edges.push(new Edge(newEdge.v1, newEdge.v2))
                     }
                 }
             }
             drawCanvas()
         }
-
+        function canvasDistance(va, vb) {
+            return Math.sqrt(Math.pow(realX(va)-realX(vb),2)+Math.pow(realY(va)-realY(vb),2))
+        }
+        function download() {
+            let blob = new Blob([serialize()], {type:textType})
+            let a = document.createElement('a');
+            a.download = "graph.txt"
+            a.href = window.URL.createObjectURL(blob);
+            a.dataset.downloadurl = `${textType}:${a.download}:${a.href}`
+            a.click()
+        }
     </script>
 </html>
 
