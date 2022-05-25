@@ -8,6 +8,7 @@
         <script src="./graph.js" rel="text/javascript"></script>
         <script src="./clique.js" rel="text/javascript"></script>
         <script src="./clique_alt.js" rel="text/javascript"></script>
+        <script src="./presets.js" rel="text/javascript"></script>
     </head>
     <body>
         <div id="content">
@@ -22,11 +23,13 @@
             <div class="input" id="results"></div>
             <div>
                 <button id="download">Download graph</button>
+                <select id="preset_selector" onchange = "presetChange()" ></select>
             </div>
             <p> Load a graph by dragging the instance file onto the drawing area </p>
         </div>
     </body>
     <script>
+        const presetSelector = document.getElementById("preset_selector")
         const resultsDiv = document.getElementById("results")
         const setSolve1 = document.getElementById("set_solve_1")
         const setSolve2 = document.getElementById("set_solve_2")
@@ -208,11 +211,10 @@
             if (file.type == textType) {
                 try {
                     let text = await file.text()
-                    deserialize(text)
+                    load(text)
                 } catch {
                     return alert("Invalid file.")
                 }
-                canvasAfter()
             } else {
                 return alert("Please upload only text files.")
             }
@@ -230,6 +232,7 @@
         window.onload = function () {
             canvas.width = canvasW.clientWidth
             canvas.height = canvasW.clientHeight
+            presetSetup()
             setupCanvas()
             drawCanvas()
         }
@@ -267,6 +270,13 @@
             a.href = window.URL.createObjectURL(blob);
             a.dataset.downloadurl = `${textType}:${a.download}:${a.href}`
             a.click()
+        }
+        function load(data) {
+            dragging = false
+            draggingCreated = false
+            draggingVertex = false
+            deserialize(data)
+            drawCanvas()
         }
     </script>
 </html>

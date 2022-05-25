@@ -117,12 +117,10 @@ function deserialize(s) {
     clearAll()
     s = s.split("\n")
     let [v, e] = s[0].split(" ").map(i => parseInt(i))
-    console.log(v,e,s)
     for (let i = 1; i <= v; i++ ) {
         addVertex(...s[i].split(" "))
     }
     for (let i = v+1; i <= v+e; i++ ) {
-        console.log(s[i].split(" "))
         addEdge(...s[i].split(" "))
     }
 }
