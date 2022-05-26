@@ -1,4 +1,6 @@
 function solve_alt() {
+    let time; let totalTime
+    if (debug) time = window.performance.now()
     k = parseInt(k)
     let size = instanceVertexCount * k;
     let clauses = []
@@ -9,15 +11,12 @@ function solve_alt() {
     for (ij of pairs) {
         let i = ij[0]
         let j = ij[1]
-        // console.log(`i = ${i}, j = ${j}`)
         // For every vertex v
         for (v in neighbours) {
-            // console.log(`Neighbours of ${v} = ${neighbours[v]}`)
             let clause = [
                 encodeVariable(i,parseInt(v)+1,false),
                 ...neighbours[v].map(n => encodeVariable(j,n,true))
             ]
-            // console.log(clause)
             clauses.push(clause)
         }
     }
@@ -37,8 +36,19 @@ function solve_alt() {
         ]
         clauses.push(clause)
     }
-    console.log(clauses.length)
+    if (debug) {
+        time = window.performance.now() - time
+        totalTime = time
+        console.log(`Time for building clauses: ${time}`)
+        time = window.performance.now()
+    }
     let solution = satSolve(size, clauses)
+    if (debug) {
+        time = window.performance.now() - time
+        console.log(`Time for solving SAT problem: ${time}`)
+        totalTime += time 
+        console.log(`Total time: ${totalTime}`)
+    }
     if (!solution) return solution
     solution = solution.filter(v => v>0).map(v => decodeVariable(v)-1)
     return solution

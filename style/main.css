@@ -108,3 +108,16 @@ button:disabled {
 #results[data-sat="UNSAT"] {
     background-color: #e22a2a;
 }
+
+#canvas_controls button {
+    margin-top: 5px;
+    padding: 5px;
+    height: fit-content;
+    width: 140px;
+    font-size: smaller;
+    background-color: gray;
+    background-image: none;
+}
+#canvas_controls button:hover {
+    background-color: rgb(151, 151, 151);
+}

@@ -14,6 +14,11 @@
         <div id="content">
             <h1>K-Clique solver</h1>
             <div id="canvas_wrapper"><canvas id="canvas" width="500", height="500"></canvas></div>
+            <div id="canvas_controls">
+                <button id="clique_all">Connect all</button>
+                <button id="remove_all">Unconnect all</button>
+                <button id="snap_grid">Snap to grid</button>
+            </div>
             <span> k = <input class="input" id="k_selector" type="number" value="1" min="1" max="1"></span>
             <button class="input" id="solve_btn">Solve!</button>
             <div>
@@ -29,6 +34,12 @@
         </div>
     </body>
     <script>
+        document.getElementById("clique_all").addEventListener("click", e => cliqueAll())
+        document.getElementById("remove_all").addEventListener("click", e => removeAllEdges())
+        document.getElementById("snap_grid").addEventListener("click", e => snapToGrid())
+
+        let gridSnap = false
+        let debug = false
         const presetSelector = document.getElementById("preset_selector")
         const resultsDiv = document.getElementById("results")
         const setSolve1 = document.getElementById("set_solve_1")
@@ -114,8 +125,30 @@
                 }
                 }, 0)
         }
+        const START = {x:0, y:0}
+        const END = {x:1, y:1}
+        function snapToGrid() {
+            gridSnap = !gridSnap
+            drawCanvas()
+        }
+        function drawGrid() {
+            if (!gridSnap) return
+            let drawLines = (left=true) => {
+            for (let i = 1/20; i <= 1; i += 1/20) {
+                let pos = {x: i, y: i}
+                context.beginPath();
+                context.moveTo(realX(left?pos:START), realY(left?START:pos));
+                context.lineTo(realX(left?pos:END), realY(left?END:pos));
+                context.lineWidth = 1
+                context.strokeStyle = "lightgray"
+                context.stroke();
+            }}
+            drawLines()
+            drawLines(false)
+        }
         function drawCanvas() {
             context.clearRect(0,0,canvas.width,canvas.height)
+            drawGrid()
             let phantomDragVertex = dragging && draggingVertex
             let phantomDragEdge = dragging && !draggingVertex
             for (edge of edges) {
@@ -130,7 +163,13 @@
             if (phantomDragVertex) phantomVertex.draw(phantomOpacity)
         }
         function getCanvasCoord(e) {
-            return {x: e.offsetX/canvas.width, y: e.offsetY/canvas.height}
+            let x = e.offsetX/canvas.width
+            let y = e.offsetY/canvas.height
+            if (gridSnap) {
+                x = Math.round(x*20)/20
+                y = Math.round(y*20)/20
+            }
+            return {x: x, y:y}
         }
         var mouseDownTime
         var mouseDownVertex
@@ -154,7 +193,7 @@
             }
             canvasAfter()
         }
-        const snap = 40
+        const snap = 25
         function canvasMouseUp(e) {
             phantomEdge.vertex1 = -1
             phantomEdge.vertex2 = -1
@@ -254,10 +293,15 @@
             for (let i = 0; i < instanceVertexCount; i++) {
                 for (let j = i+1; j < instanceVertexCount; j++) {
                     if (!connected(i,j)) {
-                        newEdge = addEdge(i, j)
+                        addEdge(i, j)
                     }
                 }
             }
+            drawCanvas()
+        }
+        function removeAllEdges() {
+            edges.forEach(e => removeEdge(e.vertex1,e.vertex2))
+            edges = []
             drawCanvas()
         }
         function canvasDistance(va, vb) {

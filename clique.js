@@ -1,4 +1,6 @@
 function solve() {
+    let time; let totalTime
+    if (debug) time = window.performance.now()
     let size = instanceVertexCount;
     let clauses = []
     if (size == 0) throw("Graph must contain at least 1 vertex")
@@ -14,8 +16,19 @@ function solve() {
     }
     let others = recursiveClauses(size - k + 1)
     clauses = clauses.concat(others)
-    console.log(clauses.length)
+    if (debug) {
+        time = window.performance.now() - time
+        totalTime = time
+        console.log(`Time for building clauses: ${time}`)
+        time = window.performance.now()
+    }
     let solution = satSolve(size, clauses)
+    if (debug) {
+        time = window.performance.now() - time
+        console.log(`Time for solving SAT problem: ${time}`)
+        totalTime += time 
+        console.log(`Total time: ${totalTime}`)
+    }
     if (!solution) return solution 
     return solution.filter(i => i>0).map(i => i-1)
 }
