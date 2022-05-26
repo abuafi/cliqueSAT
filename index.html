@@ -9,6 +9,7 @@
         <script src="./clique.js" rel="text/javascript"></script>
         <script src="./clique_alt.js" rel="text/javascript"></script>
         <script src="./presets.js" rel="text/javascript"></script>
+        <script src="./testing.js" rel="text/javascript"></script>
     </head>
     <body>
         <div id="content">
@@ -16,6 +17,7 @@
             <div id="canvas_wrapper"><canvas id="canvas" width="500", height="500"></canvas></div>
             <div id="canvas_controls">
                 <button id="clique_all">Connect all</button>
+                <button id="clique_rand">Connect random</button>
                 <button id="remove_all">Unconnect all</button>
                 <button id="snap_grid">Snap to grid</button>
             </div>
@@ -35,11 +37,13 @@
     </body>
     <script>
         document.getElementById("clique_all").addEventListener("click", e => cliqueAll())
+        document.getElementById("clique_rand").addEventListener("click", e => cliqueRandom())
         document.getElementById("remove_all").addEventListener("click", e => removeAllEdges())
         document.getElementById("snap_grid").addEventListener("click", e => snapToGrid())
 
         let gridSnap = false
         let debug = false
+        let debugData = null
         const presetSelector = document.getElementById("preset_selector")
         const resultsDiv = document.getElementById("results")
         const setSolve1 = document.getElementById("set_solve_1")
@@ -299,6 +303,16 @@
             }
             drawCanvas()
         }
+        function cliqueRandom() {
+            for (let i = 0; i < instanceVertexCount; i++) {
+                for (let j = i+1; j < instanceVertexCount; j++) {
+                    if (!connected(i,j) && Math.random() > 0.5) {
+                        addEdge(i, j)
+                    }
+                }
+            }
+            drawCanvas()
+        }
         function removeAllEdges() {
             edges.forEach(e => removeEdge(e.vertex1,e.vertex2))
             edges = []
@@ -308,9 +322,12 @@
             return Math.sqrt(Math.pow(realX(va)-realX(vb),2)+Math.pow(realY(va)-realY(vb),2))
         }
         function download() {
-            let blob = new Blob([serialize()], {type:textType})
+            downloadText("graph.txt",serialize())
+        }
+        function downloadText(fileName,data) {
+            let blob = new Blob([data], {type:textType})
             let a = document.createElement('a');
-            a.download = "graph.txt"
+            a.download = fileName
             a.href = window.URL.createObjectURL(blob);
             a.dataset.downloadurl = `${textType}:${a.download}:${a.href}`
             a.click()

@@ -1,5 +1,5 @@
 function solve() {
-    let time; let totalTime
+    let time
     if (debug) time = window.performance.now()
     let size = instanceVertexCount;
     let clauses = []
@@ -17,17 +17,15 @@ function solve() {
     let others = recursiveClauses(size - k + 1)
     clauses = clauses.concat(others)
     if (debug) {
-        time = window.performance.now() - time
-        totalTime = time
-        console.log(`Time for building clauses: ${time}`)
+        let clauseTime = window.performance.now() - time
+        debugData = {clauseTime}
         time = window.performance.now()
     }
     let solution = satSolve(size, clauses)
     if (debug) {
-        time = window.performance.now() - time
-        console.log(`Time for solving SAT problem: ${time}`)
-        totalTime += time 
-        console.log(`Total time: ${totalTime}`)
+        let satTime = window.performance.now() - time
+        debugData.satTime = satTime
+        debugData.totalTime = debugData.clauseTime + satTime
     }
     if (!solution) return solution 
     return solution.filter(i => i>0).map(i => i-1)

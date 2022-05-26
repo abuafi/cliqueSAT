@@ -1,5 +1,5 @@
 function solve_alt() {
-    let time; let totalTime
+    let time
     if (debug) time = window.performance.now()
     k = parseInt(k)
     let size = instanceVertexCount * k;
@@ -37,17 +37,15 @@ function solve_alt() {
         clauses.push(clause)
     }
     if (debug) {
-        time = window.performance.now() - time
-        totalTime = time
-        console.log(`Time for building clauses: ${time}`)
+        let clauseTime = window.performance.now() - time
+        debugData = {clauseTime}
         time = window.performance.now()
     }
     let solution = satSolve(size, clauses)
     if (debug) {
-        time = window.performance.now() - time
-        console.log(`Time for solving SAT problem: ${time}`)
-        totalTime += time 
-        console.log(`Total time: ${totalTime}`)
+        let satTime = window.performance.now() - time
+        debugData.satTime = satTime
+        debugData.totalTime = debugData.clauseTime + satTime
     }
     if (!solution) return solution
     solution = solution.filter(v => v>0).map(v => decodeVariable(v)-1)
