@@ -9,8 +9,8 @@ body {
 }
 
 .input {
-    margin-block-start: 0.67em;
-    margin-block-end: 0.67em;
+    margin-block-start: 8px;
+    margin-block-end: 8px;
     width: 50px;
     height: 30px;
     color: #093A3E;
@@ -18,8 +18,7 @@ body {
 
 #solve_btn {
     width: 150px;
-    height: 35px;
-    margin-bottom: 0.67em;
+    height: 35px; 
     color: #F0F4EF;
     font-size: 18px;
 }
@@ -28,7 +27,7 @@ body {
     border-radius: 10px;
     font-size: medium;
     padding: 1px 5px 1px 10px;
-    margin: 8px 0; 
+    margin: 8px 0 0 0;
     border: 0px;
     outline: none;
 }
@@ -55,7 +54,7 @@ button {
     background-image: linear-gradient(135deg, #1bc54b 40%, #159430);
     border: 0;
     border-radius: 10px;
-    box-sizing: border-box;
+    box-sizing: border-box; 
     color: #F0F4EF;
     cursor: pointer;
     height: 35px;
@@ -120,4 +119,18 @@ button:disabled {
 }
 #canvas_controls button:hover {
     background-color: rgb(151, 151, 151);
+}
+
+#preset_selector, #download { 
+    background-image: none;
+    background-color: rgb(151, 151, 151);
+    border: 0;
+    border-radius: 10px;
+    box-sizing: border-box; 
+    color: #F0F4EF;
+    cursor: pointer; 
+    padding: 5px; 
+    width: auto;
+    height: 30px;
+    text-transform: none;
 }
