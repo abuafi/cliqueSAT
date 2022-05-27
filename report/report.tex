@@ -96,7 +96,7 @@ Where a literal $L_i$ is either the variable $x_i$ of its negation $\neg x_i$.
 Cook's theorem, formulated in 1971 by Stephen Cook in "The complexity of theorem-proving procedures"%\cite{cook} 
 proves that the SAT problem is NP-complete, that is every NP-hard problem can be reduced to it in polynomial time.
 
-3-SAT is simply the problem of solving a SAT instance with at most 3 variables, so where $n\leq3$. The following is an example of a 3-SAT problem:
+3-SAT is simply the problem of solving a SAT instance with at most 3 literals per clause. The following is an example of a 3-SAT problem:
 %\cite{cnf}
 \begin{align}
     (\neg x_1 \lor x_2 \lor x_3)\land(x_1 \lor \neg x_2 \lor x_3)\land(x_1 \lor x_2 \lor \neg x_3)\land(\neg x_1 \lor \neg x_2 \lor \neg x_3)\label{3sat}
@@ -199,59 +199,46 @@ Take the previous example of a 3-SAT problem (\ref{3sat}). Build the graph as de
 
 Notice that for each clause, there exits a node with neighbours from eavery other part. 
 Therefore, there exists a 4-clique and by taking the literals from the nodes in the clique we have a valid solution to the 3-SAT problem.
+
 \section{K-CLIQUE TO SAT}
 
+We provide two methods to solve the problem of reducing k-clique to a SAT instance.
+\subsection{Method 1}\label{s1}
+In the first method we take $n$ variables, each representing one vertex in the graph $G = (V,E)$. We want to have a valid solution iff the variables that are \lstinline{true} correspond to a valid k-clique in the graph.
+To achieve this we create the following constraints:
 
-Given a graph G=(V,E) and a number k, we will have variables $x_{iv}$ for every 1$\leq$i$\leq$k and every v$\in$V. You should think of $x_{iv}$ as stating that v is the $ith$ vertex in the clique. We want to encode the following constraints:
+\begin{enumerate}
+    \item For each unconnected pair of vertices, at least one vertex of the pair doesn't belong in a clique (If both do, it wouldn't be a clique since the two don't connect):
+    \[ \forall (i, j) \notin E, \; \neq x_i \lor \neg x_j \]
+    \item Then, check that at least k vertices are part of the clique. We do this by checking that for every combination of $n-(k-1)$ vertices there is at least one that is part of the clique:
+    \[ \forall (i_1, i_2, \dots, i_{n-k+1}) \in (1, 2, \dots, n), \; \bigvee x_i \]
+    This is the same as checking that there does there are no less than $k$ \lstinline{true} variables. 
+    
+    If there were less than $k$ \lstinline{true} variables in a solution, then there is a combination where taking $k-1$ variables removes all \lstinline{true} variables. 
+    Therefore, if we check that for every possible combination of $k-1$ variables there is one or more \lstinline{true} in the others. Taking $k-1$ of $n$ elements and then looking at the rest is the same as taking $n-(k-1)$ elements.
+    \end{enumerate}
+This method has a complexity of $O\left(n^2+{{n}\choose{k-1}}\right)$ clauses.
+\subsection{Method 2}    
+Given a graph $G = (V,E)$ and a number $k$, we will have variables $x_{iv}$ for every 1$\leq$i$\leq$k and every v$\in$V. You should think of $x_{iv}$ as stating that v is the $ith$ vertex in the clique. We want to encode the following constraints:
 
-\begin{enumerate}\leftskip=0.8in 
-\item 	For each i, there is an $ith$ vertex in the clique: \[\forall i\in \{1,\dots,k\}, \; x_{i1} \lor x_{i2} \lor x_{i3} \lor \dots \lor x_{iv}\]
-\item   For each i,j the $ith$ vertex is different from the $jth$ vertex: \[\forall v\in V, \forall(i,j)\in \{1,\dots,k\}, \; \neg x_{iv} \lor \neg x_{jv}\]
-\item 	For each i,j, the $ith$ vertex is connected to the $jth$ vertex: \[\forall v\in V, \forall(i,j)\in \{1,\dots,k\}, \; \neg x_{iv} \lor x_{ju_1} \lor \dots \lor x_{ju_m}\], s.t. $u_{1,\dots,m}$ are the neighbours of $v$.
+\begin{enumerate}
+\item 	For each i,j, the $ith$ vertex is connected to the $jth$ vertex only if there is an edge between the two: \[\forall v\in V, \forall(i,j)\in \{1,\dots,k\}, \; \neg x_{iv} \lor x_{ju_1} \lor \dots \lor x_{ju_m}\], s.t. $u_{1,\dots,m}$ are the neighbours of $v$.
+\item 	For each $i\in(1,\dots,k)$, there is an $ith$ vertex in the clique: \[\forall i\in \{1,\dots,k\}, \; x_{i1} \lor x_{i2} \lor x_{i3} \lor \dots \lor x_{iv}\]
+\item   For each $i\in(1,\dots,k)$, We need to check that there is at most one vertex in position $i$: \[\forall(x_{ia},x_{ib})\in x_i, \; \neg x_{ia} \lor \neg x_{ib}\]
 \end{enumerate}
 
-\leftskip=0.5in
 If we take all these clauses together, we get a CNF which states that "the $x_{iv}$ encode a k-clique in G". This CNF is satisfiable if and only if G contains a k-clique.
-In order to get a 3CNF, we need to convert the constraints of the first kind into 3-clauses. If the vertices are $v_1$,...,$v_n$, we replace $V_{v \in V} x_{iv}$ with:
+This method has a complexity of $O(k^2+kn^2)$ clauses.
 
-\begin{center}
-$x_{iv_1} \lor x_{iv_2} \lor y_{iv_2} $ \newline
-$\neg y_{iv_2} \lor x_{iv_3} \lor y_{iv_3} $ \newline
-$\neg y_{iv_3} \lor x_{iv_4} \lor y_{iv_4} $ \newline
-... \newline
-$\neg y_{iv_{n-2}} \lor x_{iv_{n-1}} \lor x_{iv_n} $ \newline
-\end{center}
-
-No matter what value of y we choose. Each clause must have one true literal. To make this true, we need to decide if we need true or false value in the first clause, but for the rest, it will always be true, because each have y and ¬y
-
-\leftskip=0.5in 
-Here the $y_{iv}$ are new variables. This set of clauses is equivalent to the original clause $x_{iv_1} \lor x_{iv_2} \lor ... \lor x_{iv_n} $.
-
-\leftskip=0.0in  
-\section{ALGORITHM}
-
-\leftskip=0.5in  
-We have found a solution, in which, for a complete graph with v vertices:
-\begin{enumerate}\leftskip=0.8in 
-\item We take all unconnected pair of vertices.
-\item For each, at least one of them doesn't belong in a clique (If both did, it wouldn't be a clique since the two don't connect).
-\item Then, check that at least k vertices are part of the clique.
-\end{enumerate}
-
-\leftskip=0.0in  
 \section{CODE}
+In this section we will show the code for solving the problem using the first method seen in Section \ref{s1}.
+The \textit{solve()} function will create clauses for pairs of vertices that are not connected to each other. It will do this in the following way:
 
-\leftskip=0.5in  
-To solve the problem, we have created the following functions.
-The \textit{solve()} function will create clauses for pairs of vertices that are not connected to each other. It will do this in the following way: \newline
-
-\begin{itemize}\leftskip=0.8in
+\begin{itemize}
 \item First we check that the size (which we have stored in the variable called "size") is equal to 0. If it is, we will return an error message since the network must contain at least one vertex (otherwise it is unsolvable and makes no sense).
 \item If it is not, we continue.
 \end{itemize}
- 
-\leftskip=0.5in
-We will consider the vertices as a triangular matrix, in which in the first row will appear the connections that vertex 0 has, in the second row those of vertex 1, and so on until the last vertex (being 0 not connected with another vertex and 1 connected with another vertex).\newline
+We consider the edges as a lower triangular adjacency matrix, in which in the first row will appear the connections that vertex 0 has, in the second row those of vertex 1, and so on until the last vertex (being 0 not connected with another vertex and 1 connected with another vertex).\newline
 
 For example, if we have 5 vertices and vertex 0 is connected to vertices 1 and 3, the first column of the matrix will be the following: 0 1 0 1 0 0
 
@@ -259,13 +246,13 @@ Therefore, we will go through the matrix row by row and column by column, i.e. e
 
 For each element of the matrix:
 
-\begin{itemize}\leftskip=0.8in
+\begin{itemize}
 \item If it is 1, i.e. the vertices are connected to each other, we continue.
 \item If it is 0, i.e. the vertices are not connected, we create a clause, since that row and that column (i.e. that pair of vertices) cannot be in the clique.
 \end{itemize}
 
 \leftskip=0.5in
-Then we call the function \textit{recursiveClaurses()}, this function computes the rest of the clauses to make sure that at least k variables are true.
+Then we call the function \textit{recursiveClauses()}, this function computes the rest of the clauses to make sure that at least k variables are true.
 
 Once we have this, we will join the clauses created for the unconnected vertices with the clauses for the connected vertices, which will form our solution.
 
@@ -297,7 +284,7 @@ The code of the function is as follows:
 
 \end{lstlisting}
 
-As we have already said, the function \textit{recursiveClaurses()} computes the rest of the clauses to make sure that at least k variables are true. 
+As we have already said, the function \textit{recursiveClauses()} computes the rest of the clauses to make sure that at least k variables are true. 
 We will call this function recursively, creating a vector for each iteration in which we will add clauses for each vertex, until we reach the last vertex where we will stop the recursion.
 
 The code of the function is as follows:
