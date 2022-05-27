@@ -38,7 +38,7 @@ function solve_alt() {
     }
     if (debug) {
         let clauseTime = window.performance.now() - time
-        debugData = {clauseTime}
+        debugData = {clauseTime, clauseNumber:clauses.length}
         time = window.performance.now()
     }
     let solution = satSolve(size, clauses)
