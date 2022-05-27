@@ -140,3 +140,11 @@ button:disabled {
     height: 30px;
     text-transform: none;
 }
+
+a {
+    color: white;
+}
+
+a:hover {
+    cursor: pointer
+}
