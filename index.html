@@ -14,35 +14,67 @@
     <body>
         <div id="content">
             <h1>K-Clique solver</h1>
+            <p>Given an undirected graph and a value K, the solver finds and shows one of the possible sets of nodes that form a K-size clique</p>
             <div id="canvas_wrapper"><canvas id="canvas" width="500", height="500"></canvas></div>
+            <p> Generate new vertices by clicking on the drawing area and create edges by dragging from one vertex to another</p>
             <div id="canvas_controls">
                 <button id="clique_all">Connect all</button>
                 <button id="clique_rand">Connect random</button>
                 <button id="remove_all">Unconnect all</button>
                 <button id="snap_grid">Snap to grid</button>
             </div>
+            <div class="input" id="results"></div>
             <span> k = <input class="input" id="k_selector" type="number" value="1" min="1" max="1"></span>
             <button class="input" id="solve_btn">Solve!</button>
+            <p>Select method:</p>
             <div>
                 <button disabled class="solve_setter" id="set_solve_1">Method 1</button>
                 <button class="solve_setter" id="set_solve_2">Method 2</button>
             </div>
-            <div class="input" id="results"></div>
+            
             <div>
                 <button id="download">Download graph</button>
                 <select id="preset_selector" onchange = "presetChange()" ></select>
             </div>
-            <p> Load a graph by dragging the instance file onto the drawing area </p>
+            <p> Load a graph by dragging the instance file onto the drawing area. </p>
+            <div hidden id="debug-only">
+                <p> Click <a id="run_tests">here</a> to run the tests and generate a file with measurements (it might take some time).</p>
+                <ul id="debug-results" hidden>
+                    <li>Number of clauses: <span id="clauseNumber"></span></li>
+                    <li>Time taken to build clauses: <span id="clauseTime"></span></li>
+                    <li>Time taken to solve instance: <span id="satTime"></span></li>
+                    <li>Total time taken: <span id="totalTime"></span></li>
+                </ul>
+            </div>
         </div>
     </body>
     <script>
+        const params = new URLSearchParams(window.location.search)
+        const debugOnly = document.getElementById("debug-only")
+        const debugResults = document.getElementById("debug-results")
+        let debug = false
+
+        if (params.get('debug') == 'true') {
+            debug = true
+            debugOnly.hidden = false
+        }
+
+        function showDebugResults() {
+            if (!debug) return
+            debugResults.hidden = false
+            for (let key of Object.keys(debugData)) {
+                let el = debugResults.querySelector('#'+key)
+                if (el) el.innerHTML = debugData[key]
+            }        
+        }
+
         document.getElementById("clique_all").addEventListener("click", e => cliqueAll())
         document.getElementById("clique_rand").addEventListener("click", e => cliqueRandom())
         document.getElementById("remove_all").addEventListener("click", e => removeAllEdges())
         document.getElementById("snap_grid").addEventListener("click", e => snapToGrid())
+        document.getElementById("run_tests").addEventListener("click", e => runTests())
 
         let gridSnap = false
-        let debug = false
         let debugData = null
         const presetSelector = document.getElementById("preset_selector")
         const resultsDiv = document.getElementById("results")
@@ -114,6 +146,7 @@
             setTimeout(() => {
                 try {
                     let solution = solveFun()
+                    showDebugResults()
                     if (solution) {
                         solution = solution.slice(0,k)
                         highlight(solution)
