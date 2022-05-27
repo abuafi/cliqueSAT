@@ -6,7 +6,7 @@
   This project aims to solve K-clique problem, by providing GUI and 2 method of computing the subgraphs of size K. 
   
 
-#Usage 
+## Usage 
 
   In order to use, one needs to got the directory of project and open index.html then either draw a graph or load a preset graph
   
