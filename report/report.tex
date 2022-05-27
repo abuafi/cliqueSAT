@@ -34,6 +34,10 @@
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 \newcommand{\TRUE}{\text{TRUE}}
 \newcommand{\FALSE}{\text{FALSE}}
+\tikzstyle{state} = [draw=black,thick,text=black,circle,minimum size=20pt, inner sep = 0, font=\itshape]
+% \tikzstyle{final} = [double, double distance=2pt]
+% \tikzstyle{label} = [->,fill=white, circle, font=\small,scale=0.9, inner sep = 1pt]
+\tikzset{semithick, node distance=50pt}
 
 \lstset{
   frame=tb,
@@ -85,22 +89,119 @@ SAT, or the Boolean satisfiability problem (sometimes called propositional satis
 
 In other words, it asks whether the variables of a given Boolean formula can be consistently replaced by the values TRUE or FALSE in such a way that the formula evaluates to TRUE. If this is the case, the formula is called satisfiable (SAT). On the other hand, if no such assignment exists, the function expressed by the formula is FALSE for all possible variable assignments and the formula is unsatisfiable (UNSAT).
 
-For the rest of this report, we will be referring to the conjunctive normal form version of the SAT problem, that is one where there are $m\in\mathbb{N}$ clauses of $n\in\mathbb{N}$ literals $L$ that are arranged in the following form:
+For the rest of this report, we will be referring to the conjunctive normal form version of the SAT problem, or CNF-SAT, that is one where there are $m\in\mathbb{N}$ clauses of $n\in\mathbb{N}$ literals $L$ that are arranged in the following form:
 \[ \bigwedge_{i<m}\bigvee_{j<n}L_i^j \]
 Where a literal $L_i$ is either the variable $x_i$ of its negation $\neg x_i$.
 
+Cook's theorem, formulated in 1971 by Stephen Cook in "The complexity of theorem-proving procedures"%\cite{cook} 
+proves that the SAT problem is NP-complete, that is every NP-hard problem can be reduced to it in polynomial time.
+
 3-SAT is simply the problem of solving a SAT instance with at most 3 variables, so where $n\leq3$. The following is an example of a 3-SAT problem:
 %\cite{cnf}
-\begin{align*}
-    (\neg x_1 \lor x_2 \lor x_3)\land(x_1 \lor \neg x_2 \lor x_3)\land(x_1 \lor x_2 \lor \neg x_3)\land(\neg x_1 \lor \neg x_2 \lor \neg x_3)
-\end{align*}
+\begin{align}
+    (\neg x_1 \lor x_2 \lor x_3)\land(x_1 \lor \neg x_2 \lor x_3)\land(x_1 \lor x_2 \lor \neg x_3)\land(\neg x_1 \lor \neg x_2 \lor \neg x_3)\label{3sat}
+\end{align}
 This problem is satisfiable, for example for the values $x = [\TRUE, \TRUE, \FALSE]$. 
 \subsection{3-SAT to k-clique}
-% TODO
-\leftskip=0.0in 
+We can reduce the 3-SAT problem to the k-clique problem to prove that it is NP-hard.
+
+We do this by generating an instance of the k-clique problem from an instance of a 3-SAT problem in polynomial time. 
+If we can do this and solve the clique problem in polynomial time then we can solve any instance of 3-SAT in polynomial time by transforming it to a k-clique instance with this same method.
+
+For a CNF formula with $k$ clauses we can find this reduction by building a graph with the following features:
+\begin{itemize}
+    \item It is $k$-partite, that is for each clause of the 3-SAT problem there exists a group of indipendent vertices where no vertex is connected to another vertex of the same group.
+    \item Each group or part consists of 3 vertices, each representing one literal of the corresponding clause.
+    \item Each vertex is connected to all other vertices in differenct parts that represent compatible literals. Two literals are considered compatible if there could exists a solution where both are true, for example $x_1$, $\neg x_2$, $x_3$ are all compatible, while $x_1$ and $\neg x_1$ are not compatible.
+\end{itemize}
+Take the previous example of a 3-SAT problem (\ref{3sat}). Build the graph as defined above:
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\node[state] (a1) {$\neg x_1$};
+\node[state, below of=a1] (a2) {$x_2$};
+\node[state, below of=a2] (a3) {$x_3$};
+
+\node[state, above right =1.5cm of a1] (b1) {$x_1$};
+\node[state, right of=b1] (b2) {$\neg x_2$};
+\node[state, right of=b2] (b3) {$x_3$};
+
+\node[state, below right =1.5cm of b3] (c1) {$x_1$};
+\node[state, below of=c1] (c2) {$x_2$};
+\node[state, below of=c2] (c3) {$\neg x_3$};
+
+\node[state, below right =1.5cm of a3] (d1) {$\neg x_1$};
+\node[state, right of=d1] (d2) {$\neg x_2$};
+\node[state, right of=d2] (d3) {$\neg x_3$};
+
+% \draw (a1) to (b1);
+\draw (a1) to (b2);
+\draw (a1) to (b3);
+% \draw (a1) to (c1);
+\draw (a1) to (c2);
+\draw (a1) to (c3);
+\draw (a1) to (d1);
+\draw (a1) to (d2);
+\draw (a1) to (d3);
+\draw[red] (b1) to (a2);
+\draw (b1) to (a3);
+\draw (b1) to (c1);
+\draw[red] (b1) to (c2);
+\draw (b1) to (c3);
+% \draw (b1) to (d1);
+\draw (b1) to (d2);
+\draw (b1)[red] to (d3);
+\draw (c1) to (b1);
+\draw (c1) to (b2);
+\draw (c1) to (b3);
+\draw (c1) to (a2);
+\draw (c1) to (a3);
+% \draw (c1) to (d1);
+\draw (c1) to (d2);
+\draw (c1) to (d3);
+\draw (d1) to (b2);
+\draw (d1) to (b3);
+\draw (d1) to (c2);
+\draw (d1) to (c3);
+\draw (d1) to (a2);
+\draw (d1) to (a3);
+
+% \draw (a2) to (b2);
+\draw (a2) to (b3);
+\draw (a2)[red] to (c2);
+\draw (a2) to (c3);
+% \draw (a2) to (d2);
+\draw (a2)[red] to (d3);
+\draw (b2) to (a3);
+% \draw (b2) to (c2);
+\draw (b2) to (c3);
+\draw (b2) to (d2);
+\draw (b2) to (d3);
+\draw (c2) to (b3);
+\draw (c2) to (a3);
+\draw (c2) to (d2);
+\draw (c2)[red] to (d3);
+\draw (d2) to (b3);
+\draw (d2) to (c3);
+\draw (d2) to (a3);
+
+\draw (a3) to (b3);
+% \draw (a3) to (c3);
+% \draw (a3) to (d3);
+\draw (b3) to (a3);
+% \draw (b3) to (c3);
+% \draw (b3) to (d3);
+\draw (c3) to (d3);
+\end{tikzpicture}
+\caption{3-SAT to k-clique reduction of example (\ref{f1})}
+\end{figure}
+
+Notice that for each clause, there exits a node with neighbours from eavery other part. 
+Therefore, there exists a 4-clique and by taking the literals from the nodes in the clique we have a valid solution to the 3-SAT problem.
 \section{K-CLIQUE TO SAT}
 
-\leftskip=0.5in 
+
 Given a graph G=(V,E) and a number k, we will have variables $x_{iv}$ for every 1$\leq$i$\leq$k and every v$\in$V. You should think of $x_{iv}$ as stating that v is the $ith$ vertex in the clique. We want to encode the following constraints:
 
 \begin{enumerate}\leftskip=0.8in 
@@ -221,18 +322,35 @@ The code of the function is as follows:
 \begin{figure}[h]
     \centering
     \begin{subfigure}{0.49\linewidth}
-        \scalebox{0.5}{\includegraphics{figures/Figure_1.png}}
+        \scalebox{0.5}{\includegraphics{figures/Figure_insect_time.png}}
         \subcaption{Insect preset}
     \end{subfigure}
     \begin{subfigure}{0.49\linewidth}
-        \scalebox{0.5}{\includegraphics{figures/Figure_2.png}}
+        \scalebox{0.5}{\includegraphics{figures/Figure_icosagon_time.png}}
         \subcaption{Icosagon preset with full clique}
     \end{subfigure}
     \begin{subfigure}{0.49\linewidth}
-        \scalebox{0.5}{\includegraphics{figures/Figure_3.png}}
+        \scalebox{0.5}{\includegraphics{figures/Figure_icosagon_random_time.png}}
+        \subcaption{Icosagon preset with random edges}
+    \end{subfigure}
+    \begin{subfigure}{0.49\linewidth}
+        \scalebox{0.5}{\includegraphics{figures/Figure_fish_time.png}}
         \subcaption{Icosagon preset with random edges}
     \end{subfigure}
     \caption{Recorded times for the program to solve each preset at different values of $k$. (Times are given in milliseconds)}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{0.49\linewidth}
+        \scalebox{0.5}{\includegraphics{figures/Figure_insect_clauses.png}}
+        \subcaption{Insect preset}
+    \end{subfigure}
+    \begin{subfigure}{0.49\linewidth}
+        \scalebox{0.5}{\includegraphics{figures/Figure_fish_clauses.png}}
+        \subcaption{Icosagon preset with random edges}
+    \end{subfigure}
+    \caption{Number of clauses generated by each preset at different values of $k$.}
 \end{figure}
 
 \newpage\section{BIBLIOGRAPHY}
@@ -246,6 +364,7 @@ The code of the function is as follows:
 \item\href{https://www.cs.umd.edu/~gasarch/TOPICS/sat/SATtalk.pdf}{SAT}
 \item\href{https://logic4free.informatik.uni-kiel.de/llocs/Conjunctive_normal_form_(propositional_logic)}{cnf}
 \item\href{https://cs.stackexchange.com/questions/70531/reduction-3sat-and-clique}{reduction 3 sat to clique}
+\item\href{https://dl.acm.org/doi/10.1145/800157.805047}{cook}
 \end{itemize}
 
 \end{document}
